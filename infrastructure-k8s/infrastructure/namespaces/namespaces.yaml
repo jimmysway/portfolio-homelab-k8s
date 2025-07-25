@@ -1,0 +1,34 @@
+# namespaces.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+  labels:
+    name: argocd
+    app.kubernetes.io/part-of: argocd
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: media
+  labels:
+    name: media
+    purpose: photo-storage
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infrastructure
+  labels:
+    name: infrastructure
+    purpose: networking-and-dns
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring
+    purpose: observability
+  annotations:
+    description: "Optional namespace for future monitoring tools"

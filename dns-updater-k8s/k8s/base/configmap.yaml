@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflare-ddns-config
+  namespace: cloudflare-ddns
+data:
+  AUTH_METHOD: "token"
+  DOMAIN_NAME: "homelab.local"
+  RECORD_NAMES: "home"
+  TTL: "1"
+  PROXY: "false"
+  UPDATE_IPV6: "false"
+  MODE: "loop"
+  REPEAT_SECONDS: "300"
+  LOG_LEVEL: "I"

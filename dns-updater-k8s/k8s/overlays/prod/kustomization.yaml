@@ -1,0 +1,11 @@
+resources:
+- ../../base
+namePrefix: dev-
+patches:
+  - target:
+      kind: ConfigMap
+      name: cloudflare-ddns-config
+    patch: |-
+      - op: replace
+        path: /data/RECORD_NAMES
+        value: "home"

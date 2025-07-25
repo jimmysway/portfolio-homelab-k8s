@@ -1,0 +1,9 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: dashboard-redirect-simple
+  namespace: traefik-system
+spec:
+  redirectRegex:
+    regex: ^http://([^/]+)/$
+    replacement: http://$1/dashboard/

@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-dashboard
+  namespace: traefik-system
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - traefik.example.com
+    secretName: traefik-dashboard-tls
+  rules:
+  - host: traefik.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: traefik
+            port:
+              number: 8080
+---
+# Basic Auth middleware for dashboard security
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: auth
+  namespace: traefik-system
+spec:
+  basicAuth:
+    secret: traefik-dashboard-auth
+---
+# Secret for basic auth (username: admin, password: admin)
+# Generate with: htpasswd -nb admin admin
+apiVersion: v1
+kind: Secret
+metadata:
+  name: traefik-dashboard-auth
+  namespace: traefik-system
+type: Opaque
+data:
+  users: YWRtaW46JGFwcjEkSDY1dnlMTEUkMWZYUmhQWkVYTGhWNDBvOC5rMGQ5Lw==  # admin:admin

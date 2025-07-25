@@ -1,0 +1,51 @@
+# Redirect root path to /dashboard/
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-dashboard-redirect
+  namespace: traefik-system
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-dashboard-redirect-simple@kubernetescrd
+    traefik.ingress.kubernetes.io/router.priority: "100"
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: traefik.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Exact
+        backend:
+          service:
+            name: traefik
+            port:
+              number: 8080
+---
+# Handle dashboard and API paths
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-dashboard-main
+  namespace: traefik-system
+  annotations:
+    traefik.ingress.kubernetes.io/router.priority: "200"
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: traefik.example.com
+    http:
+      paths:
+      - path: /dashboard
+        pathType: Prefix
+        backend:
+          service:
+            name: traefik
+            port:
+              number: 8080
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: traefik
+            port:
+              number: 8080

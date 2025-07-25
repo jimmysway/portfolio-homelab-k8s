@@ -1,0 +1,95 @@
+- name: Home
+  # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
+  # hide-desktop-navigation: true
+  columns:
+    - size: small
+      widgets:
+        - type: calendar
+          first-day-of-week: monday
+        - type: monitor
+          limit: 10
+          collapse-after: 5
+          cache: 1m
+          title: Services
+          sites:
+            - title: Immich
+              url: https://photos.example.com
+        - type: twitch-channels
+          channels:
+            - ratirl
+            - theprimeagen
+            - caedrel
+            - thebausffs
+            - drututt
+            - rangerzx
+
+    - size: full
+      widgets:
+        - type: group
+          widgets:
+            - type: hacker-news
+            - type: lobsters
+
+        - type: videos
+          channels:
+            - UCHnyfMqiRRG1u-2MsSQLbXA # Veritasium
+            - UCOFiUtKui6-x4T-J7_DgCag # Caedrel
+            - UCk9lx4sKRQCDTyXFaouk_vQ # Mighty
+            - UCsBjURrPoezykLs9EqgamOA # Fireship
+            - UC_-hYjoNe4PJNFa9iZ4lraA # Good Work
+            - UCvSXMi2LebwJEM1s4bz5IBA # New Money
+            - UCY1kMZp36IQSyNx_9h4mpCg # Mark Rober
+
+
+        - type: group
+          widgets:
+            - type: reddit
+              subreddit: technology
+              show-thumbnails: true
+            - type: reddit
+              subreddit: selfhosted
+              show-thumbnails: true
+
+    - size: small
+      widgets:
+        - type: weather
+          location: Boston, United States
+          units: metric # alternatively "imperial"
+          hour-format: 12h # alternatively "24h"
+          # Optionally hide the location from being displayed in the widget
+          # hide-location: true
+
+        - type: markets
+          cache: 30s
+          markets:
+            - symbol: SPY
+              name: S&P 500
+            - symbol: QQQ
+              name: Nasdaq 100
+            - symbol: HSI
+              name: Hang Seng Index
+            - symbol: NVDA
+              name: NVIDIA
+            - symbol: AAPL
+              name: Apple
+            - symbol: MSFT
+              name: Microsoft
+            - symbol : ANET
+              name: Arista Networks
+            - symbol: BRK-B
+              name: Berkshire Hathaway
+            - symbol: BABA
+              name: Alibaba
+            - symbol: PDD
+              name: Pinduoduo
+
+        - type: releases
+          cache: 1d
+          # Without authentication the Github API allows for up to 60 requests per hour. You can create a
+          # read-only token from your Github account settings and use it here to increase the limit.
+          # token: ...
+          repositories:
+            - CCI-MOC/invoicing
+            - CCI-MOC/nerc-rates
+            - immich-app/immich
+            - kubernetes/kubernetes

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-service
+  namespace: immich
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: immich
+    app.kubernetes.io/name: server
+  ports:
+    - name: http
+      protocol: TCP
+      port: 2283
+      targetPort: 2283

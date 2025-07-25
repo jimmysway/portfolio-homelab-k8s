@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  default.server: |
+    # External services accessible via Traefik ingress
+    photos.example.com home.homelab.local {
+        hosts {
+            10.0.0.109 photos.example.com home.homelab.local
+            fallthrough
+        }
+        log
+        errors
+    }
+
+    glance.example.com {
+        hosts {
+            10.0.0.109 glance.example.com
+            fallthrough
+        }
+        log
+        errors
+    }
+
+    traefik.example.com {
+        hosts {
+            10.0.0.109 traefik.example.com
+            fallthrough
+        }
+        log
+        errors
+    }
+
+    # Additional custom domains (update these to your actual services)
+    # service1.domain.com service2.someotherdomain.se {
+    #     hosts {
+    #         10.0.0.109 service1.domain.com service2.someotherdomain.se
+    #         fallthrough
+    #     }
+    #     log
+    #     errors
+    # }

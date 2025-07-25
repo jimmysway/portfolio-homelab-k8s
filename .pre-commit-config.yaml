@@ -1,0 +1,43 @@
+repos:
+  # Basic pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-yaml
+        exclude: |
+          (?x)^(
+            .*helm/.*|
+            .*charts/.*|
+            .*templates/.*|
+            .*crds/.*|
+            .*base/.*|
+            .*infrastructure/.*|
+            .*namespaces/.*|
+            .*storage\.yaml$|
+            .*dashboard.*\.yaml$|
+            .*ingress.*\.yaml$
+          )$
+      - id: check-json
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Custom basic security check
+  - repo: local
+    hooks:
+      - id: basic-security-check
+        name: Basic Security Check
+        entry: ./.git/hooks/basic-security-check.sh
+        language: script
+        files: \.(sh|yaml|yml|json|md|txt|conf|cfg|env)$
+        exclude: |
+          (?x)^(
+            \.git/.*|
+            tests/results/.*|
+            \.pre-commit-config\.yaml|
+            \.secrets\.baseline
+          )$

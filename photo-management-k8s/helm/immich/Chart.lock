@@ -1,0 +1,12 @@
+dependencies:
+- name: common
+  repository: https://bjw-s-labs.github.io/helm-charts
+  version: 1.4.0
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 16.0.0
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 20.13.2
+digest: sha256:5bdd3481a4acb2e0bbd616d3ac0c15ab6f83996f0b37bbc4b85ec1ffbcb486e6
+generated: "2025-05-01T13:38:27.225699251Z"

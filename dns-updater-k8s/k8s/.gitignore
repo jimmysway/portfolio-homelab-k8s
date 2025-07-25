@@ -1,0 +1,10 @@
+# Kubernetes secrets - never commit these!
+secret.yaml
+
+# Temporary files
+*.tmp
+*.log
+
+# IDE files
+.vscode/
+.idea/

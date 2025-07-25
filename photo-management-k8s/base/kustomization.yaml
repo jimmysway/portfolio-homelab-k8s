@@ -1,0 +1,9 @@
+resources:
+  - db-pv.yaml
+  - db-pvc.yaml
+  - library-pv.yaml
+  - library-pvc.yaml
+  - service.yaml
+  - storageclass.yaml
+  - ingress.yaml
+namespace: immich

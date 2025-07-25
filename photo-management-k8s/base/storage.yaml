@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-db-pv
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 50Gi # This size is mostly for kubernetes to know about the volume. It doesn't resize the fs.
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/HOMELAB-HDD-2-XFS/cynthus-immich/immich-app/postgres
+
+---
+# Persistent Volume Claim for the Database

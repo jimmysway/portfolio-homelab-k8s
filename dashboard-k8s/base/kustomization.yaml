@@ -1,0 +1,21 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - namespace.yaml
+
+namespace: glance
+
+configMapGenerator:
+  - name: glance-config
+    files:
+      - config/glance.yml
+  - name: glance-home
+    files:
+      - config/home.yml
+  - name: glance-envs
+    envs:
+      - config/.env
+  - name: glance-assets
+    files:
+      - assets/user.css

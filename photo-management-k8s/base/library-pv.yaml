@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-library-pv
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 9Ti
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/HOMELAB-HDD-2-XFS/cynthus-immich/immich-app/library
+    type: DirectoryOrCreate

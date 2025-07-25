@@ -1,0 +1,65 @@
+---
+# YAML Lint Configuration for Kubernetes Manifests
+
+extends: default
+
+rules:
+  # Line length - Allow longer lines for Kubernetes manifests
+  line-length:
+    max: 120
+    level: warning
+
+  # Indentation - Kubernetes uses 2 spaces
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Comments - Allow comments without spaces
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: false
+
+  # Empty lines
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+  # Document separators
+  document-start:
+    present: false  # Not all K8s manifests need ---
+
+  # Truthy values - Allow yes/no for Kubernetes
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    check-keys: false
+
+  # Brackets - Allow single line brackets for small arrays
+  brackets:
+    max-spaces-inside: 1
+    max-spaces-inside-empty: 0
+
+  # Braces - Allow single line braces for small objects
+  braces:
+    max-spaces-inside: 1
+    max-spaces-inside-empty: 0
+
+  # Key duplicates - Critical for Kubernetes
+  key-duplicates: enable
+
+  # Quoted strings - Flexible for Kubernetes values
+  quoted-strings:
+    quote-type: any
+    required: false
+
+  # Float values - Allow for resource specifications
+  float-values: disable
+
+# Ignore patterns
+ignore: |
+  tests/results/
+  .git/
+  .github/workflows/
+  **/node_modules/
+  **/.terraform/

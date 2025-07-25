@@ -1,0 +1,21 @@
+[Interface]
+PrivateKey=eKj8+WJi3es1+TqOhi5vFruPZGEKwHNMdGvQDepcSH0=
+Address=10.8.0.1/24
+ListenPort=51821
+PostUp = iptables -A FORWARD -i %i -o ENI -j ACCEPT; iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o ENI -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -o ENI -j ACCEPT; iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o ENI -j MASQUERADE
+
+[Peer]
+# Jimmy's Laptop
+PublicKey = XzpkYK0RUj32xvlueNyAmf+ubZWYD9rqJMq70o5R2ws=
+AllowedIPs = 10.8.0.2/32
+
+[Peer]
+# Jimmy's Phone
+PublicKey = Fxx4isEimhqNOtbkvMhv3BYKonk3WeDi/FO2zIWbWXE=
+AllowedIPs = 10.8.0.3/32
+
+[Peer]
+# Cynthia's Phone
+PublicKey = inatRE/+tSmiqjh4otdSaaffhLuKAeKDkuf1USvFCSg=
+AllowedIPs = 10.8.0.6/32

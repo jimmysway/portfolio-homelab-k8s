@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wireguard
+  namespace: wireguard
+spec:
+  selector:
+    matchLabels:
+      name: wireguard
+  template:
+    metadata:
+      labels:
+        name: wireguard
+    spec:
+      initContainers:
+        - name: "wireguard-template-replacement"
+          image: "busybox"
+          command: ["sh", "-c", "ENI=$(ip route get 8.8.8.8 | grep 8.8.8.8 | awk '{print $5}'); sed \"s/ENI/$ENI/g\" /etc/wireguard-secret/wg1.conf.template > /etc/wireguard/wg1.conf; chmod 400 /etc/wireguard/wg1.conf"]
+          volumeMounts:
+            - name: wireguard-config
+              mountPath: /etc/wireguard/
+            - name: wireguard-secret
+              mountPath: /etc/wireguard-secret/
+
+      containers:
+      - image: linuxserver/wireguard:latest
+        name: wireguard
+        ports:
+        - containerPort: 51821
+          name: wireguard
+          protocol: UDP
+        volumeMounts:
+          - name: wireguard-config
+            mountPath: /etc/wireguard/
+            readOnly: true
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+
+      volumes:
+      - name: wireguard-config
+        persistentVolumeClaim:
+          claimName: wireguard-config-pvc
+      - name: wireguard-secret
+        secret:
+          secretName: wireguard-secret

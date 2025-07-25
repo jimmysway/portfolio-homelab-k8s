@@ -1,0 +1,10 @@
+resources:
+- namespace.yaml
+- configmap.yaml
+- deployment.yaml
+
+namespace: cloudflare-ddns
+
+images:
+- name: ghcr.io/davideshay/cloudflare-ddns-updater
+  newTag: latest

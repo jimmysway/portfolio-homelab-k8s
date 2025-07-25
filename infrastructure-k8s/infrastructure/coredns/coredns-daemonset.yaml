@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: coredns-host
+  namespace: kube-system
+  labels:
+    k8s-app: coredns-host
+spec:
+  selector:
+    matchLabels:
+      k8s-app: coredns-host
+  template:
+    metadata:
+      labels:
+        k8s-app: coredns-host
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: coredns
+        image: coredns/coredns:1.10.1
+        args:
+        - -conf
+        - /etc/coredns/Corefile
+        ports:
+        - name: dns
+          containerPort: 53
+          protocol: UDP
+        - name: dns-tcp
+          containerPort: 53
+          protocol: TCP
+        - name: metrics
+          containerPort: 9153
+          protocol: TCP
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/coredns
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9080
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9181
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: config-volume
+        configMap:
+          name: coredns-host-config
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule

@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-dashboard-simple
+  namespace: traefik-system
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-system-dashboard-redirect-simple@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: traefik.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: traefik
+            port:
+              number: 8080

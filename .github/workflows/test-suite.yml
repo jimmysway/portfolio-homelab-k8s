@@ -1,0 +1,317 @@
+name: Home Lab Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run (all, unit, integration, security, validation, health)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+          - security
+          - validation
+          - health
+      verbose:
+        description: 'Enable verbose output'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  # Test configuration
+  FAIL_FAST: true
+  OUTPUT_FORMAT: console
+
+jobs:
+  # Job to run all tests
+  test-suite:
+    name: Run Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test-category:
+          - unit
+          - integration
+          - security
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          # Install required tools for testing
+          sudo apt-get update
+          sudo apt-get install -y \
+            curl \
+            jq \
+            python3-yaml \
+            bc
+
+          # Install kubectl for manifest validation
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Prepare Test Environment
+        run: |
+          # Make test scripts executable
+          find tests/ -name "*.sh" -exec chmod +x {} \;
+          chmod +x run-all-tests.sh
+
+          # Create test results directory
+          mkdir -p tests/results
+
+      - name: Run Unit Tests
+        if: matrix.test-category == 'unit'
+        run: |
+          ./run-all-tests.sh --suite unit --verbose
+        continue-on-error: false
+
+      - name: Run Integration Tests
+        if: matrix.test-category == 'integration'
+        run: |
+          ./run-all-tests.sh --suite integration --verbose
+        continue-on-error: false
+
+      - name: Run Security Tests
+        if: matrix.test-category == 'security'
+        run: |
+          ./run-all-tests.sh --suite security --verbose
+        continue-on-error: false
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.test-category }}
+          path: |
+            tests/results/*.json
+            tests/results/*.log
+          retention-days: 30
+
+      - name: Generate Test Summary
+        if: always()
+        run: |
+          echo "## Test Results for ${{ matrix.test-category }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "tests/results/test-summary.json" ]; then
+            # Extract key metrics from test summary
+            total_tests=$(grep '"total_tests"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            passed_tests=$(grep '"passed_tests"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            failed_tests=$(grep '"failed_tests"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            success_rate=$(grep '"test_success_rate"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+
+            echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Total Tests | $total_tests |" >> $GITHUB_STEP_SUMMARY
+            echo "| Passed Tests | $passed_tests |" >> $GITHUB_STEP_SUMMARY
+            echo "| Failed Tests | $failed_tests |" >> $GITHUB_STEP_SUMMARY
+            echo "| Success Rate | $success_rate% |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No test summary available" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Comprehensive test job that runs all suites
+  full-test-suite:
+    name: Full Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: test-suite
+    if: always()
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl jq python3-yaml bc
+
+          # Install kubectl
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Run Complete Test Suite
+        run: |
+          chmod +x run-all-tests.sh
+          find tests/ -name "*.sh" -exec chmod +x {} \;
+
+          # Determine which suite to run
+          if [ "${{ github.event.inputs.test_suite }}" = "all" ] || [ -z "${{ github.event.inputs.test_suite }}" ]; then
+            ./run-all-tests.sh --verbose
+          else
+            ./run-all-tests.sh --suite "${{ github.event.inputs.test_suite }}" --verbose
+          fi
+
+      - name: Generate Comprehensive Report
+        if: always()
+        run: |
+          echo "# 🧪 Home Lab Test Suite Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "tests/results/test-summary.json" ]; then
+            # Parse comprehensive results
+            total_suites=$(grep '"total_suites"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            passed_suites=$(grep '"passed_suites"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            failed_suites=$(grep '"failed_suites"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            total_tests=$(grep '"total_tests"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            passed_tests=$(grep '"passed_tests"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            failed_tests=$(grep '"failed_tests"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+            success_rate=$(grep '"test_success_rate"' tests/results/test-summary.json | grep -o '[0-9]*' | head -1)
+
+            echo "## 📊 Overview" >> $GITHUB_STEP_SUMMARY
+            echo "| Category | Passed | Failed | Total | Success Rate |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|--------|--------|-------|--------------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Test Suites | $passed_suites | $failed_suites | $total_suites | $(echo "scale=1; $passed_suites * 100 / $total_suites" | bc)% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Individual Tests | $passed_tests | $failed_tests | $total_tests | $success_rate% |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Add status badge
+            if [ "$failed_suites" -eq 0 ]; then
+              echo "## ✅ Status: ALL TESTS PASSED" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## ❌ Status: SOME TESTS FAILED" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            # Add detailed breakdown
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## 🔍 Test Categories" >> $GITHUB_STEP_SUMMARY
+            echo "- **Unit Tests**: DNS updater function testing" >> $GITHUB_STEP_SUMMARY
+            echo "- **Integration Tests**: API interactions and manifest validation" >> $GITHUB_STEP_SUMMARY
+            echo "- **Security Tests**: Compliance and security best practices" >> $GITHUB_STEP_SUMMARY
+            echo "- **Health Checks**: Service availability and configuration" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Complete Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: complete-test-results
+          path: |
+            tests/results/
+          retention-days: 90
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let comment = '## 🧪 Test Suite Results\n\n';
+
+            try {
+              const results = JSON.parse(fs.readFileSync('tests/results/test-summary.json', 'utf8'));
+
+              if (results.suite_summary.failed_suites === 0) {
+                comment += '✅ **All tests passed!**\n\n';
+              } else {
+                comment += '❌ **Some tests failed.**\n\n';
+              }
+
+              comment += `| Metric | Value |\n`;
+              comment += `|--------|-------|\n`;
+              comment += `| Test Suites | ${results.suite_summary.passed_suites}/${results.suite_summary.total_suites} passed |\n`;
+              comment += `| Individual Tests | ${results.test_summary.passed_tests}/${results.test_summary.total_tests} passed |\n`;
+              comment += `| Success Rate | ${results.test_summary.test_success_rate}% |\n`;
+
+            } catch (error) {
+              comment += 'Could not parse test results.\n';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Security-focused test job
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Security Tests
+        run: |
+          chmod +x tests/security/security-compliance-tests.sh
+          tests/security/security-compliance-tests.sh
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-report
+          path: |
+            tests/results/security-compliance-report.json
+          retention-days: 90
+
+  # Notification job
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [test-suite, full-test-suite]
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'push')
+
+    steps:
+      - name: Determine Overall Status
+        id: status
+        run: |
+          if [ "${{ needs.full-test-suite.result }}" = "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=All tests passed successfully" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=Some tests failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Badge
+        run: |
+          if [ "${{ steps.status.outputs.status }}" = "success" ]; then
+            echo "![Tests](https://img.shields.io/badge/tests-passing-brightgreen)" > test-badge.md
+          else
+            echo "![Tests](https://img.shields.io/badge/tests-failing-red)" > test-badge.md
+          fi
+
+      # Uncomment and configure if you want Slack/Discord notifications
+      # - name: Notify Slack
+      #   if: failure()
+      #   uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: ${{ job.status }}
+      #     text: "Home Lab test suite failed!"
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
